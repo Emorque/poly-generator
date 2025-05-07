@@ -1,0 +1,36 @@
+#main_page {
+  height: 100vh;
+  background-color: black;
+  overflow: hidden;
+  font-family: "Noto Sans", sans-serif;
+  position: relative;
+}
+
+#background_image, #background_filter {
+  height: 100%;
+  width: 100%;
+  position: fixed;
+  top: 0px;
+  left: 0px;
+}
+
+#background_image {
+  z-index: 1;
+  background-image: url("/public/test.jpg");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.6;
+  filter: blur(4px) grayscale(30%);
+}
+
+#background_filter {
+  z-index: 2;
+  background: radial-gradient(rgb(0 0 0 / 60%) 50%, transparent);
+}
+
+#polyrhythm {
+  height: 100vh;
+  width: 100vw;
+  position: relative;
+  z-index: 3;
+}
