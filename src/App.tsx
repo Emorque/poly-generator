@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './App.css'
 import { Poly } from './poly'
 import { Menu } from './menu'
@@ -25,8 +25,8 @@ function App() {
     setColors(Array(21).fill("#FFC432"));
     setSettings(
       {
-        duration: 120, // Total time for all dots to realign at the starting point
-        maxCycles: Math.max(colors.length, 21), // Must be above colors.length or else...
+        duration: 360, // Total time for all dots to realign at the starting point
+        maxCycles: 40, // Must be above colors.length or else...
         soundEnabled: false, // User still must interact with screen first
         pulseEnabled: true, // Pulse will only show if sound is enabled as well
         instrument: "wave", // "default" | "wave" | "vibraphone"
@@ -76,7 +76,6 @@ function App() {
   }, [viewUI])
 
   const updateSettings = (cycles: number, color: string, duration : number, volume : number) => {
-    console.log(cycles, color, duration, volume)
     setSettings(
       prevSettings => (
         {...prevSettings, 
@@ -91,6 +90,11 @@ function App() {
       setColors(Array(21).fill(color));
       document.documentElement.style.setProperty('--userColor', color);
     }
+  }
+
+  const updateBackground = (background : string) => {
+    if (!background_ref.current) return;
+    background_ref.current.style.backgroundImage = `url("${background}")`;
   }
 
   const ui_style = {
@@ -140,6 +144,7 @@ function App() {
         {menuVisible && 
           <Menu color={colors[0]} settings={settings} 
           updateSettings={updateSettings}
+          updateBackground={updateBackground}
           />
         }
       </div>

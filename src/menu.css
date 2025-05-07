@@ -65,3 +65,10 @@ p {
     aspect-ratio: 1;
     cursor: pointer;
 }
+
+input::file-selector-button {
+    background-color: var(--white);
+    /* border: 0.2rem solid var(--black); */
+    border-radius: 0.2rem;
+    color: black
+}

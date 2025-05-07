@@ -7,9 +7,10 @@ interface MenuInterface {
     color: string,
     settings: settingsType,
     updateSettings : (cycles: number, color: string, duration : number, volume : number) => void,
+    updateBackground : (background : string) => void
 }
 
-export const Menu = ({color, settings, updateSettings} : MenuInterface) => {
+export const Menu = ({color, settings, updateSettings, updateBackground} : MenuInterface) => {
     const [menuColor, setMenuColor] = useState<string>(color) 
     const [menuMaxCycle, setMenuMaxCycle] = useState<number>(settings.maxCycles)
     const [menuDuration, setMenuDuration] = useState<number>(settings.duration)
@@ -17,6 +18,12 @@ export const Menu = ({color, settings, updateSettings} : MenuInterface) => {
     
     const handleNewSettings = () => {
         updateSettings(menuMaxCycle, menuColor, menuDuration, menuVolume)
+    }
+
+    const verifyUpload: React.ChangeEventHandler<HTMLInputElement> = (event) => {
+        if (!event.target.files || event.target.files.length === 0) return
+        const background = event.target.files[0]
+        updateBackground(URL.createObjectURL(background))
     }
 
     return (
@@ -66,6 +73,16 @@ export const Menu = ({color, settings, updateSettings} : MenuInterface) => {
             <div className='slider_div'>
                 <label><span>Color</span>: {menuColor}</label>
                 <HexColorPicker color={menuColor} onChange={setMenuColor} />
+            </div>
+            
+            <div className='slider_div'>
+                <label><span>Upload Background</span></label>
+                <input
+                    type='file'
+                    accept="image/*"
+                    onChange={verifyUpload}
+                >
+                </input>
             </div>
 
             <p id='message'>Press <span>Shift</span> to toggle UI</p>

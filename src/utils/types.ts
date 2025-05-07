@@ -6,3 +6,10 @@ export type settingsType = {
     instrument: string,
     volume: number
 } 
+
+export type Arc = {
+    color: string,
+    velocity: number,
+    lastImpactTime: number,
+    nextImpactTime: number,
+}

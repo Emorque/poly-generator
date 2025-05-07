@@ -13,6 +13,7 @@ interface PolyInterface {
 }
 
 import { audioManager } from "./utils/audioManager"
+import type { Arc } from "./utils/types";
 const audioFiles = Array.from({ length: 21 }, (_, i) => ({
     id: `soft_${i + 1}`,
     url: `/soft/soft_${i + 1}.mp3`
@@ -22,9 +23,6 @@ export const Poly = ({colors, settings} : PolyInterface) => {
     const polyRef = useRef<HTMLCanvasElement>(null) 
     const penRef = useRef<CanvasRenderingContext2D | null>(null);
     const [startTime, setStartTime] = useState<number>(new Date().getTime());
-    const keysRef = useRef<HTMLAudioElement[] | null>(null); // Ref to store the audio elements
-
-    console.log("rerender", settings)
 
     useEffect(() => {
         audioManager.loadAll(audioFiles).then(() => {
@@ -47,13 +45,7 @@ export const Poly = ({colors, settings} : PolyInterface) => {
         if (canvas) {
             penRef.current = canvas.getContext("2d");
         }
-
-        console.log("rerendered poly initial")
-
-
         setStartTime(new Date().getTime())
-
-
     }, [colors]);    
 
     const calculateVelocity = (index : number) => {  
@@ -120,20 +112,13 @@ export const Poly = ({colors, settings} : PolyInterface) => {
         drawArc(position.x, position.y, pointRadius, 0, 2 * Math.PI, "fill");    
     }
 
-    const playKey = (index: number) => {
-        if (!keysRef.current) return;
-        keysRef.current[index].currentTime = 0
-        keysRef.current[index].play();
-    }
-
-    const [arcState, setArcState] = useState<any[]>([])
+    const [arcState, setArcState] = useState<Arc[]>([])
 
     useEffect(() => {
         const polyRhythm = polyRef.current
         const pen = penRef.current;
-        let arcs: any[] = [];
+        let arcs: Arc[] = [];
         if (!polyRhythm || !pen) return;
-        console.log("inti called", settings)
         const init = () => {
             pen.lineCap = "round";
             
@@ -234,7 +219,7 @@ export const Poly = ({colors, settings} : PolyInterface) => {
               
               if(currentTime >= arc.nextImpactTime) {      
                 if(settings.soundEnabled) {
-                  audioManager.play(`soft_${index + 1}`, ((settings.volume / 100) * 0.2))
+                  audioManager.play(`soft_${index + 1}`, ((settings.volume / 100) * 0.15))
                   arc.lastImpactTime = arc.nextImpactTime;
                 }
                 
