@@ -10,16 +10,37 @@ interface PolyInterface {
         instrument: string,
         volume: number
     },
-    muteVolume : () => void
 }
 
-export const Poly = ({colors, settings, muteVolume} : PolyInterface) => {
+import { audioManager } from "./utils/audioManager"
+const audioFiles = Array.from({ length: 21 }, (_, i) => ({
+    id: `soft_${i + 1}`,
+    url: `/soft/soft_${i + 1}.mp3`
+}));
+
+export const Poly = ({colors, settings} : PolyInterface) => {
     const polyRef = useRef<HTMLCanvasElement>(null) 
     const penRef = useRef<CanvasRenderingContext2D | null>(null);
     const [startTime, setStartTime] = useState<number>(new Date().getTime());
     const keysRef = useRef<HTMLAudioElement[] | null>(null); // Ref to store the audio elements
 
     console.log("rerender", settings)
+
+    useEffect(() => {
+        audioManager.loadAll(audioFiles).then(() => {
+          console.log('All audio loaded');
+        });
+    
+        // Resume context on user gesture
+        const resume = () => {
+          audioManager.resumeContext();
+          window.removeEventListener('click', resume);
+        };
+    
+        window.addEventListener('click', resume);
+    
+        return () => window.removeEventListener('click', resume);
+    }, []);
 
     useEffect(() => {
         const canvas = polyRef.current;
@@ -29,18 +50,10 @@ export const Poly = ({colors, settings, muteVolume} : PolyInterface) => {
 
         console.log("rerendered poly initial")
 
-        const getUrl = (index : number) => `/soft/soft_${index}.mp3`;
 
         setStartTime(new Date().getTime())
 
-        keysRef.current = colors.map((_, index) => {
-            // console.log(getUrl(index))
-            const audio = new Audio(getUrl(index + 1));
-            
-            audio.volume = 0.15;
-            
-            return audio;
-        });
+
     }, [colors]);    
 
     const calculateVelocity = (index : number) => {  
@@ -107,15 +120,9 @@ export const Poly = ({colors, settings, muteVolume} : PolyInterface) => {
         drawArc(position.x, position.y, pointRadius, 0, 2 * Math.PI, "fill");    
     }
 
-    useEffect(() => {
-        document.addEventListener('visibilitychange', muteVolume);
-        return () => {
-            document.removeEventListener('visibilitychange', muteVolume)
-        }
-    })
-
     const playKey = (index: number) => {
         if (!keysRef.current) return;
+        keysRef.current[index].currentTime = 0
         keysRef.current[index].play();
     }
 
@@ -126,6 +133,7 @@ export const Poly = ({colors, settings, muteVolume} : PolyInterface) => {
         const pen = penRef.current;
         let arcs: any[] = [];
         if (!polyRhythm || !pen) return;
+        console.log("inti called", settings)
         const init = () => {
             pen.lineCap = "round";
             
@@ -141,11 +149,10 @@ export const Poly = ({colors, settings, muteVolume} : PolyInterface) => {
                 nextImpactTime
                 }
             });
-            console.log(arcs)
             setArcState(arcs)
         }
         init()
-    }, [colors])
+    }, [colors, startTime, settings.duration, settings.maxCycles])
 
     useEffect(() => {
         const polyRhythm = polyRef.current
@@ -162,6 +169,7 @@ export const Poly = ({colors, settings, muteVolume} : PolyInterface) => {
           
             const currentTime = new Date().getTime(),
                   elapsedTime = (currentTime - startTime) / 1000;
+
             
             const length = Math.min(polyRhythm.width, polyRhythm.height) * 0.9,
                   offset = (polyRhythm.width - length) / 2;
@@ -226,7 +234,7 @@ export const Poly = ({colors, settings, muteVolume} : PolyInterface) => {
               
               if(currentTime >= arc.nextImpactTime) {      
                 if(settings.soundEnabled) {
-                  playKey(index)
+                  audioManager.play(`soft_${index + 1}`, settings.volume)
                   arc.lastImpactTime = arc.nextImpactTime;
                 }
                 
@@ -240,13 +248,13 @@ export const Poly = ({colors, settings, muteVolume} : PolyInterface) => {
             });
             
             animationFrameId = requestAnimationFrame(draw);
-          }
+        }
         draw()
 
         return () => {
             cancelAnimationFrame(animationFrameId);
         }
-    }, [settings, arcState])
+    }, [settings, arcState, startTime])
 
     return (
         <canvas id="polyrhythm" ref={polyRef}>

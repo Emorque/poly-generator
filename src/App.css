@@ -34,3 +34,19 @@
   position: relative;
   z-index: 3;
 }
+
+#mute_btn {
+  position: fixed;
+  top: 1vh;
+  left: 50%;
+  z-index: 4;
+  transform: translateX(-50%);
+}
+
+#menu_wrapper {
+  position: absolute;
+  z-index: 4;   
+  width: 30%;
+  height: 50%;
+  transition: right 1s ease;
+}
