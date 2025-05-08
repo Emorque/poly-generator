@@ -219,7 +219,7 @@ export const Poly = ({colors, settings} : PolyInterface) => {
               
               if(currentTime >= arc.nextImpactTime) {      
                 if(settings.soundEnabled) {
-                  audioManager.play(`soft_${index + 1}`, ((settings.volume / 100) * 0.15))
+                  audioManager.play(`soft_${index + 1}`, ((settings.volume / 100) * 0.05))
                   arc.lastImpactTime = arc.nextImpactTime;
                 }
                 
