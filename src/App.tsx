@@ -19,6 +19,8 @@ function App() {
   const [menuVisible, setMenuVisible] = useState<boolean>(false)
   const [menuActive, setMenuActive] = useState<boolean>(false)
 
+  const [paused, setPaused] = useState<boolean>(false)
+
   const background_ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -76,16 +78,18 @@ function App() {
   }, [viewUI])
 
   const updateSettings = (cycles: number, color: string, duration : number, volume : number) => {
-    setSettings(
-      prevSettings => (
-        {...prevSettings, 
-          maxCycles: Math.max(colors.length, cycles), // Must be above colors.length or else...
-          duration: duration,
-          volume: volume,
-          soundEnabled: false
-        }
+    // if (settings.maxCycles !== cycles || settings.duration !== duration || settings.volume !== volume){
+      setSettings(
+        prevSettings => (
+          {...prevSettings, 
+            maxCycles: Math.max(colors.length, cycles), // Must be above colors.length or else...
+            duration: duration,
+            volume: volume,
+            soundEnabled: false
+          }
+        )
       )
-    )
+    // }
     if (color !== colors[0]) {
       setColors(Array(21).fill(color));
       document.documentElement.style.setProperty('--userColor', color);
@@ -108,6 +112,18 @@ function App() {
         {...prevSettings, soundEnabled: !prevSettings.soundEnabled}
       )
     )
+  }
+
+  const [startTime, setStartTime] = useState<number>(Date.now());
+
+  const handleReset = () => {
+    setStartTime(Date.now())
+    setPaused(false)
+    muteVolume()
+  }
+
+  const toggleAnimation = () => {
+    setPaused(!paused)
   }
 
   return (
@@ -145,10 +161,13 @@ function App() {
           <Menu color={colors[0]} settings={settings} 
           updateSettings={updateSettings}
           updateBackground={updateBackground}
+          handleReset={handleReset}
+          toggleAnimation={toggleAnimation}
+          paused={paused}
           />
         }
       </div>
-      <Poly colors={colors} settings={settings}/>
+      <Poly colors={colors} settings={settings} startTime={startTime} paused={paused}/>
     </div>
   )
 }

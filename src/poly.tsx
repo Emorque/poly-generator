@@ -2,27 +2,21 @@ import { useEffect, useRef, useState } from "react"
 
 interface PolyInterface {
     colors: string[],
-    settings: {
-        duration: number, 
-        maxCycles: number,
-        soundEnabled: boolean, 
-        pulseEnabled: boolean,
-        instrument: string,
-        volume: number
-    },
+    settings: settingsType,
+    startTime: number,
+    paused: boolean
 }
 
 import { audioManager } from "./utils/audioManager"
-import type { Arc } from "./utils/types";
+import type { Arc, settingsType } from "./utils/types";
 const audioFiles = Array.from({ length: 21 }, (_, i) => ({
     id: `soft_${i + 1}`,
     url: `/soft/soft_${i + 1}.mp3`
 }));
 
-export const Poly = ({colors, settings} : PolyInterface) => {
+export const Poly = ({colors, settings, startTime, paused} : PolyInterface) => {
     const polyRef = useRef<HTMLCanvasElement>(null) 
     const penRef = useRef<CanvasRenderingContext2D | null>(null);
-    const [startTime, setStartTime] = useState<number>(new Date().getTime());
 
     useEffect(() => {
         audioManager.loadAll(audioFiles).then(() => {
@@ -45,7 +39,6 @@ export const Poly = ({colors, settings} : PolyInterface) => {
         if (canvas) {
             penRef.current = canvas.getContext("2d");
         }
-        setStartTime(new Date().getTime())
     }, [colors]);    
 
     const calculateVelocity = (index : number) => {  
@@ -139,6 +132,14 @@ export const Poly = ({colors, settings} : PolyInterface) => {
         init()
     }, [colors, startTime, settings.duration, settings.maxCycles])
 
+    const pauseStart = useRef<number | null>(null);
+    const totalPauseTime = useRef<number>(0);
+    
+    useEffect(() => {
+        pauseStart.current = null;
+        totalPauseTime.current = 0;
+    }, [startTime])
+
     useEffect(() => {
         const polyRhythm = polyRef.current
         const pen = penRef.current;
@@ -146,14 +147,26 @@ export const Poly = ({colors, settings} : PolyInterface) => {
 
         if (!polyRhythm || !pen) return;
 
-
-        const draw = () => { // Definitely not optimized
-
+        const draw = () => {
+            if (paused) {
+                if (!pauseStart.current) {
+                    pauseStart.current = Date.now();
+                }
+                animationFrameId = requestAnimationFrame(draw);
+                return;
+            }
+        
+            if (pauseStart.current) {
+                totalPauseTime.current += Date.now() - pauseStart.current;
+                pauseStart.current = null;
+            }
+        
             polyRhythm.width = polyRhythm.clientWidth;
             polyRhythm.height = polyRhythm.clientHeight;
-          
-            const currentTime = new Date().getTime(),
-                  elapsedTime = (currentTime - startTime) / 1000;
+        
+            const currentTime = Date.now();
+            const pausedTime = totalPauseTime.current;
+            const elapsedTime = (currentTime - startTime - pausedTime) / 1000;
 
             
             const length = Math.min(polyRhythm.width, polyRhythm.height) * 0.9,
@@ -195,7 +208,7 @@ export const Poly = ({colors, settings} : PolyInterface) => {
               const radius = base.initialRadius + (base.spacing * index);
           
               // Draw arcs
-              pen.globalAlpha = determineOpacity(currentTime, arc.lastImpactTime, 0.15, 0.65, 1000);
+              pen.globalAlpha = determineOpacity(currentTime - pausedTime, arc.lastImpactTime, 0.15, 0.65, 1000);
               pen.lineWidth = base.length * 0.002;
               pen.strokeStyle = arc.color;
               
@@ -206,7 +219,7 @@ export const Poly = ({colors, settings} : PolyInterface) => {
               drawArc(center.x, center.y, radius, offset, Math.PI - offset);
               
               // Draw impact points
-              pen.globalAlpha = determineOpacity(currentTime, arc.lastImpactTime, 0.15, 0.85, 1000);
+              pen.globalAlpha = determineOpacity(currentTime - pausedTime, arc.lastImpactTime, 0.15, 0.85, 1000);
               pen.fillStyle = arc.color;
               
               drawPointOnArc(center, radius, base.circleRadius * 0.75, Math.PI);
@@ -217,7 +230,7 @@ export const Poly = ({colors, settings} : PolyInterface) => {
               pen.globalAlpha = 1;
               pen.fillStyle = arc.color;
               
-              if(currentTime >= arc.nextImpactTime) {      
+              if(currentTime - pausedTime >= arc.nextImpactTime) {      
                 if(settings.soundEnabled) {
                   audioManager.play(`soft_${index + 1}`, ((settings.volume / 100) * 0.05))
                   arc.lastImpactTime = arc.nextImpactTime;
@@ -235,11 +248,11 @@ export const Poly = ({colors, settings} : PolyInterface) => {
             animationFrameId = requestAnimationFrame(draw);
         }
         draw()
-
+        
         return () => {
             cancelAnimationFrame(animationFrameId);
         }
-    }, [settings, arcState, startTime])
+    }, [settings, arcState, startTime, paused])
 
     return (
         <canvas id="polyrhythm" ref={polyRef}>

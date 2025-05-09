@@ -7,10 +7,13 @@ interface MenuInterface {
     color: string,
     settings: settingsType,
     updateSettings : (cycles: number, color: string, duration : number, volume : number) => void,
-    updateBackground : (background : string) => void
+    updateBackground : (background : string) => void,
+    handleReset : () => void,
+    toggleAnimation: () => void,
+    paused : boolean
 }
 
-export const Menu = ({color, settings, updateSettings, updateBackground} : MenuInterface) => {
+export const Menu = ({color, settings, updateSettings, updateBackground, handleReset, toggleAnimation, paused} : MenuInterface) => {
     const [menuColor, setMenuColor] = useState<string>(color) 
     const [menuMaxCycle, setMenuMaxCycle] = useState<number>(settings.maxCycles)
     const [menuDuration, setMenuDuration] = useState<number>(settings.duration)
@@ -86,7 +89,9 @@ export const Menu = ({color, settings, updateSettings, updateBackground} : MenuI
             </div>
 
             <p id='message'>Press <span>Shift</span> to toggle UI</p>
-            <button onClick={handleNewSettings}>Set Settings</button>
+            <button onClick={handleNewSettings} disabled={paused}>Set Settings</button>
+            <button onClick={toggleAnimation}>{paused? "Unpause" : "Pause"}</button>
+            <button onClick={handleReset}>Reset to Start</button>
         </div>
     )
 }
