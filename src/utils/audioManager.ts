@@ -1,3 +1,5 @@
+import * as Tone from "tone";
+
 class AudioManager {
     context: AudioContext;
     buffers: Map<string, AudioBuffer> = new Map();
@@ -27,6 +29,22 @@ class AudioManager {
       source.connect(gainNode)
       gainNode.connect(this.context.destination)
       source.start(0);
+    }
+
+    async pitchUp(id: string, volume: number, audioURL: string) {
+      const gainNode = new Tone.Gain(volume).toDestination();
+
+      const player = new Tone.GrainPlayer({
+        url: audioURL,
+        playbackRate: 1,
+        detune: parseFloat(id)*100, 
+        grainSize: 0.2, 
+        overlap: 0.1,         
+        loop: false         
+      }).connect(gainNode)
+      await Tone.loaded();
+
+      player.start();
     }
   
     resumeContext() {

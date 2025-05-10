@@ -12,14 +12,16 @@ function App() {
     soundEnabled: false, 
     pulseEnabled: false,
     instrument: "",
-    volume: 0
+    volume: 0,
+    usingUploadedAudio: false
   })
 
   const [viewUI, setViewUI] = useState<boolean>(true)
   const [menuVisible, setMenuVisible] = useState<boolean>(false)
   const [menuActive, setMenuActive] = useState<boolean>(false)
-
   const [paused, setPaused] = useState<boolean>(false)
+
+  const [audioURL, setAudioURL] = useState<string | null>(null)
 
   const background_ref = useRef<HTMLDivElement>(null)
 
@@ -32,7 +34,8 @@ function App() {
         soundEnabled: false, // User still must interact with screen first
         pulseEnabled: true, // Pulse will only show if sound is enabled as well
         instrument: "wave", // "default" | "wave" | "vibraphone"
-        volume: 100
+        volume: 100,
+        usingUploadedAudio: false,
     }
     )
   }, [])
@@ -121,9 +124,21 @@ function App() {
     setPaused(false)
     muteVolume()
   }
+  
+  const handleAudio = (url : string) => {
+    setAudioURL(url)
+  }
 
   const toggleAnimation = () => {
     setPaused(!paused)
+  }
+
+  const toggleAudio = () => {
+    setSettings(
+      prevSettings => (
+        {...prevSettings, usingUploadedAudio: !prevSettings.usingUploadedAudio}
+      )
+    )
   }
 
   return (
@@ -164,10 +179,13 @@ function App() {
           handleReset={handleReset}
           toggleAnimation={toggleAnimation}
           paused={paused}
+          audioURL={audioURL}
+          handleAudio={handleAudio}
+          toggleAudio={toggleAudio}
           />
         }
       </div>
-      <Poly colors={colors} settings={settings} startTime={startTime} paused={paused}/>
+      <Poly colors={colors} settings={settings} startTime={startTime} paused={paused} audioURL={audioURL}/>
     </div>
   )
 }

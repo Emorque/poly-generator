@@ -4,7 +4,8 @@ interface PolyInterface {
     colors: string[],
     settings: settingsType,
     startTime: number,
-    paused: boolean
+    paused: boolean,
+    audioURL: string | null
 }
 
 import { audioManager } from "./utils/audioManager"
@@ -14,7 +15,7 @@ const audioFiles = Array.from({ length: 21 }, (_, i) => ({
     url: `/soft/soft_${i + 1}.mp3`
 }));
 
-export const Poly = ({colors, settings, startTime, paused} : PolyInterface) => {
+export const Poly = ({colors, settings, startTime, paused, audioURL} : PolyInterface) => {
     const polyRef = useRef<HTMLCanvasElement>(null) 
     const penRef = useRef<CanvasRenderingContext2D | null>(null);
 
@@ -232,7 +233,12 @@ export const Poly = ({colors, settings, startTime, paused} : PolyInterface) => {
               
               if(currentTime - pausedTime >= arc.nextImpactTime) {      
                 if(settings.soundEnabled) {
-                  audioManager.play(`soft_${index + 1}`, ((settings.volume / 100) * 0.05))
+                    if (settings.usingUploadedAudio && audioURL) {
+                        audioManager.pitchUp(`${index + 1}`, ((settings.volume / 100) * 0.05), audioURL)
+                    }
+                    else {
+                        audioManager.play(`soft_${index + 1}`, ((settings.volume / 100) * 0.05))
+                    }
                   arc.lastImpactTime = arc.nextImpactTime;
                 }
                 
@@ -252,7 +258,7 @@ export const Poly = ({colors, settings, startTime, paused} : PolyInterface) => {
         return () => {
             cancelAnimationFrame(animationFrameId);
         }
-    }, [settings, arcState, startTime, paused])
+    }, [settings, arcState, startTime, paused, audioURL])
 
     return (
         <canvas id="polyrhythm" ref={polyRef}>

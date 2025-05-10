@@ -4,7 +4,8 @@ export type settingsType = {
     soundEnabled: boolean, 
     pulseEnabled: boolean,
     instrument: string,
-    volume: number
+    volume: number,
+    usingUploadedAudio: boolean
 } 
 
 export type Arc = {
